@@ -8,8 +8,14 @@ local function is_marked(jump)
         return false
     end
 
-    local buffer_name = require("harpoon.utils").normalize_path(vim.api.nvim_buf_get_name(jump.buffer))
-    local mark = require("harpoon.mark").get_marked_file(buffer_name)
+    local ok, buffer_name = pcall(vim.api.nvim_buf_get_name, jump.buffer)
+    if not ok then
+        return false
+    end
+
+    local file_path = require("harpoon.utils").normalize_path(buffer_name)
+    local mark = require("harpoon.mark").get_marked_file(file_path)
+
     return query.different(jump) and mark ~= nil
 end
 
