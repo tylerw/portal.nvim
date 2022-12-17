@@ -1,4 +1,4 @@
-local config = require("portal.config")
+local settings = require("portal.settings")
 local highlight = require("portal.highlight")
 local types = require("portal.types")
 
@@ -28,6 +28,9 @@ local M = {}
 --- @field row integer
 --- @field col integer
 --- @field details table
+
+---@type Portal.Namespace
+local default_namespace = vim.api.nvim_create_namespace("Portal")
 
 --- @param buffer integer
 --- @return boolean
@@ -86,14 +89,14 @@ function M.label(jumps, namespace)
     local labels = {}
 
     for index, jump in pairs(jumps) do
-        if jump.direction == types.Direction.NONE then
+        if jump.direction == types.direction.none then
             goto continue
         end
         if not ensure_loaded(jump.buffer) then
             goto continue
         end
 
-        local label = config.labels[index]
+        local label = settings.labels[index]
         labels[index] = label
 
         local function clamp(value, min, max)
@@ -119,9 +122,10 @@ function M.label(jumps, namespace)
 end
 
 --- @param jumps Portal.Jump[]
---- @param namespace Portal.Namespace
+--- @param namespace? Portal.Namespace
 --- @return Portal.Portal[]
 function M.open(jumps, namespace)
+    namespace = namespace or default_namespace
     if vim.fn.has("nvim-0.9") == 1 then
         return M.open_0_9(jumps, namespace)
     else
@@ -143,16 +147,16 @@ function M.open_0_8(jumps, namespace)
     for index, jump in pairs(jumps) do
         local windows = {}
 
-        local empty_portal = jump.direction == types.Direction.NONE
+        local empty_portal = jump.direction == types.direction.none
         if not empty_portal and not ensure_loaded(jump.buffer) then
             goto continue
         end
 
-        local render_title = not empty_portal or config.portal.title.render_empty
-        local render_body = not empty_portal or config.portal.body.render_empty
+        local render_title = not empty_portal or settings.portal.title.render_empty
+        local render_body = not empty_portal or settings.portal.body.render_empty
 
-        local title_options = vim.deepcopy(config.portal.title.options)
-        local body_options = vim.deepcopy(config.portal.body.options)
+        local title_options = vim.deepcopy(settings.portal.title.options)
+        local body_options = vim.deepcopy(settings.portal.body.options)
 
         if render_title then
             title_options.row = offset
@@ -229,13 +233,13 @@ function M.open_0_9(jumps, namespace)
     for index, jump in pairs(jumps) do
         local windows = {}
 
-        local empty_portal = jump.direction == types.Direction.NONE
+        local empty_portal = jump.direction == types.direction.none
         if not empty_portal and not ensure_loaded(jump.buffer) then
             goto continue
         end
 
-        local render_portal = not empty_portal or config.portal.render_empty
-        local window_options = vim.deepcopy(config.portal.options)
+        local render_portal = not empty_portal or settings.portal.render_empty
+        local window_options = vim.deepcopy(settings.portal.options)
 
         if render_portal then
             local title = jump.query.name or ""

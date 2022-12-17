@@ -12,7 +12,7 @@ _Theme: [catppuccin](https://github.com/catppuccin/nvim)_
 
 Portal is a plugin that aims to build upon and enhance existing jumplist motions (i.e. `<c-o>` and `<c-i>`) by surfacing contextual information with the use of [portals](#portals), and providing multiple jump options by means of [queries](#queries).
 
-To get started, [install](#installation) the plugin using your preferred package manager, setup the plugin, add the suggested keybindings for portals and tagging, and give it a go! You can find the default configuration for the plugin in the secion [below](#configuration).
+To get started, [install](#installation) the plugin using your preferred package manager, setup the plugin, add the suggested keybindings for portals and tagging, and give it a go! Default settings for the plugin can be found in the [settings](#default-settings) section below
 
 ## Features
 
@@ -24,7 +24,7 @@ To get started, [install](#installation) the plugin using your preferred package
 ## Requirements
 
 * [Neovim >= 0.5](https://github.com/neovim/neovim/releases/tag/v0.5.0)
-* Neovim >= 0.9 - (Optional, for [floating window title](https://github.com/neovim/neovim/issues/17458))
+* Neovim >= 0.9 - optional, for [floating window title](https://github.com/neovim/neovim/issues/17458)
 
 ## Installation
 
@@ -33,13 +33,6 @@ To get started, [install](#installation) the plugin using your preferred package
 ```lua
 use {
     "cbochs/portal.nvim",
-    config = function()
-        require("portal").setup({
-            -- Your configuration goes here
-            -- Leave empty to use the default configuration
-            -- Please see the Configuration section below for more information
-        })
-    end,
     requires = {
         "cbochs/grapple.nvim",  -- Optional: provides the "grapple" query item
         "ThePrimeagen/harpoon", -- Optional: provides the "harpoon" query item
@@ -53,12 +46,15 @@ use {
 Plug "cbochs/portal.nvim"
 ```
 
-## Configuration
+## Default Settings
 
-The following is the default configuration. All configuration options may be overridden during plugin setup.
+The following are the default settings for Portal. **Setup is not required**, but settings may be overridden by passing them as table arguments to the `portal#setup` function.
 
 ```lua
 require("portal").setup({
+    ---@type "debug" | "info" | "warn" | "error"
+    log_level = "warn",
+
     ---The default queries used when searching the jumplist. An entry can
     ---be a name of a registered query item, an anonymous predicate, or
     ---a well-formed query item. See Queries section for more information.
@@ -81,12 +77,6 @@ require("portal").setup({
     ---portal performance. Set this to a value less than 100 to limit the number
     ---of jumps in the jumplist that will be queried.
     lookback = 100,
-
-    ---Keycodes used for jumping forward and backward. These are not overrides
-    ---of the current keymaps, but instead will be used internally when a jump
-    ---is selected.
-    backward = "<c-o>",
-    forward = "<c-i>",
 
     portal = {
         title = {
@@ -124,14 +114,6 @@ require("portal").setup({
             },
         },
     },
-
-    integrations = {
-        ---cbochs/grapple.nvim: registers the "grapple" query item
-        grapple = false,
-
-        ---ThePrimeagen/harpoon: registers the "harpoon" query item
-        harpoon = false,
-    }
 })
 ```
 
@@ -158,14 +140,14 @@ For example, a query of `{ "modified", "different" }` will attempt to find two j
 local query = { "modified", "different" }
 
 -- A query can be used in the context of jumping and passed in as an option
--- or through the configuration
+-- or during setup
 require("portal").jump_forward({ query = query })
 
 -- A list of query-like items must be resolved into proper Portal.QueryItem's
 local resolved_query = require("portal.query").resolve(query)
 
 -- A search can be explicitly searched for, returning a list of Portal.Jump.
--- Invalid jumps will have their direction field set to types.Direction.NONE
+-- Invalid jumps will have their direction field set to types.direction.none
 local available_jumps = require("portal.jump").search(query)
 ```
 
@@ -195,7 +177,7 @@ See how to create your own [custom query items](#custom-query-items) and availab
 
 ### Custom Query Items
 
-A **query item** found in the configuration is in fact a "query-like" item. It may be either a `string`, `Portal.Predicate`, or `Portal.QueryItem`. A string may be used to specify a query item that has been _registered_. To register a query, use `query.register` and pass in a key, predicate, and optional `name` and `name_short`.
+A **query item** found in the settings is in fact a "query-like" item. It may be either a `string`, `Portal.Predicate`, or `Portal.QueryItem`. A string may be used to specify a query item that has been _registered_. To register a query, use `query.register` and pass in a key, predicate, and optional `name` and `name_short`.
 
 #### Registering query items
 
@@ -289,19 +271,13 @@ vim.api.nvim_set_hl(0, "PortalBorderNone", { fg = "#89b4fa" })
 
 ## Integrations
 
+The following additional queries are automatically registered if their associated plugin is found.
+
 ### [grapple.nvim](https://github.com/cbochs/grapple.nvim)
 
 **Query item**: `"grapple"`
 
 Matches jumps that are in a buffer tagged by [grapple.nvim](https://github.com/cbochs/grapple.nvim).
-
-```lua
-require("portal").setup({
-    integrations = {
-        grapple = true
-    }
-])
-```
 
 **Usage**
 
@@ -316,9 +292,8 @@ require("portal").setup({
 Use Portal and Grapple to jump directly to the first tagged buffer navigating backwards in the jumplist, without opening any portals.
 
 ```lua
-local types = require("portal.types")
 local query = require("portal.query").resolve({ "grapple" })
-local jumps = require("portal.jump").search(query, types.Direction.BACKWARD)
+local jumps = require("portal.jump").search(query, "backward")
 require("portal.jump").select(jumps[1])
 ```
 
@@ -327,14 +302,6 @@ require("portal.jump").select(jumps[1])
 **Query item**: `"harpoon"`
 
 Matches jumps that are in a buffer marked by [harpoon](https://github.com/ThePrimeagen/harpoon).
-
-```lua
-require("portal").setup({
-    integrations = {
-        harpoon = true
-    }
-})
-```
 
 **Usage**
 
